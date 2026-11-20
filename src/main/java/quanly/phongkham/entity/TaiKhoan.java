@@ -1,11 +1,12 @@
 package quanly.phongkham.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "TaiKhoan")
+@Table(name = "TaiKhoan", schema = "dbo")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,6 +21,8 @@ public class TaiKhoan {
     @Column(name = "TenDangNhap", nullable = false, length = 50)
     private String tenDangNhap;
 
+    // Nhan mat khau khi tao/cap nhat nhung khong bao gio tra ve trong response
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "MatKhau", nullable = false, length = 255)
     private String matKhau;
 

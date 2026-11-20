@@ -1,12 +1,16 @@
 package quanly.phongkham.controller;
 
+import quanly.phongkham.dto.KhungGioSlotDTO;
 import quanly.phongkham.entity.LichLamViec;
 import quanly.phongkham.service.LichLamViecService;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lich-lam-viec")
@@ -42,9 +46,7 @@ public class LichLamViecController {
 
     @GetMapping("/ngay/{ngay}")
     public List<LichLamViec> getByNgay(
-            @PathVariable @org.springframework.format.annotation.DateTimeFormat(
-                    iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE
-            ) LocalDate ngay) {
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ngay) {
 
         return service.getByNgay(ngay);
     }
@@ -52,32 +54,56 @@ public class LichLamViecController {
     @GetMapping("/bac-si/{maBacSi}/ngay/{ngay}")
     public List<LichLamViec> getByBacSiAndNgay(
             @PathVariable Integer maBacSi,
-            @PathVariable @org.springframework.format.annotation.DateTimeFormat(
-                    iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE
-            ) LocalDate ngay) {
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ngay) {
 
         return service.getByBacSiAndNgay(maBacSi, ngay);
+    }
+
+    @GetMapping("/bac-si/{maBacSi}/khoang-ngay")
+    public List<LichLamViec> getByBacSiAndKhoangNgay(
+            @PathVariable Integer maBacSi,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay) {
+
+        return service.getByBacSiAndKhoangNgay(maBacSi, tuNgay, denNgay);
+    }
+
+    @GetMapping("/bac-si/{maBacSi}/slots")
+    public List<KhungGioSlotDTO> getSlots(
+            @PathVariable Integer maBacSi,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ngay) {
+
+        return service.getAvailableSlots(maBacSi, ngay);
     }
 
     @GetMapping("/bac-si/{maBacSi}/ngay/{ngay}/con-trong")
     public List<LichLamViec> getAvailable(
             @PathVariable Integer maBacSi,
-            @PathVariable @org.springframework.format.annotation.DateTimeFormat(
-                    iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE
-            ) LocalDate ngay) {
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ngay) {
 
         return service.getAvailableSchedule(maBacSi, ngay);
     }
 
     @PostMapping
-    public ResponseEntity<LichLamViec> create(
+    public ResponseEntity<?> create(
             @RequestBody LichLamViec lichLamViec) {
 
-        return ResponseEntity.ok(service.save(lichLamViec));
+        try {
+            // Tạo mới: bỏ mã để chắc chắn không ghi đè ca có sẵn
+            lichLamViec.setMaLich(null);
+            return ResponseEntity.ok(service.save(lichLamViec));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message",
+                            "Ca làm việc này đã tồn tại cho bác sĩ trong ngày!"));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LichLamViec> update(
+    public ResponseEntity<?> update(
             @PathVariable Integer id,
             @RequestBody LichLamViec lichLamViec) {
 
@@ -85,17 +111,32 @@ public class LichLamViecController {
             return ResponseEntity.notFound().build();
         }
 
-        lichLamViec.setMaLich(id);
-        return ResponseEntity.ok(service.save(lichLamViec));
+        try {
+            lichLamViec.setMaLich(id);
+            return ResponseEntity.ok(service.save(lichLamViec));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message",
+                            "Ca làm việc này đã tồn tại cho bác sĩ trong ngày!"));
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<?> delete(@PathVariable Integer id) {
+
         if (service.getById(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+        try {
+            service.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 }

@@ -15,4 +15,5 @@ public interface ChuyenKhoaRepository
     List<ChuyenKhoa> findByTenChuyenKhoaContainingIgnoreCase(
             String tenChuyenKhoa
     );
+    
 }

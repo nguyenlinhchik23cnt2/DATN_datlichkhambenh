@@ -2,6 +2,8 @@ package quanly.phongkham.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -47,4 +49,8 @@ public class LichHen {
 
     @Column(name = "TenBenhNhan", length = 100)
     private String tenBenhNhan;
+
+        // Không lưu DB, chỉ để trả ngày khám cho frontend (lấy từ LichLamViec)
+    @Transient
+    private LocalDate ngayLamViec;
 }

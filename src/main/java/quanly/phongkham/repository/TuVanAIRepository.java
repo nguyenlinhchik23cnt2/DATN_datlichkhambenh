@@ -13,4 +13,5 @@ public interface TuVanAIRepository
     List<TuVanAI> findByMaBenhNhan(Integer maBenhNhan);
 
     List<TuVanAI> findByMaChuyenKhoaGoiY(Integer maChuyenKhoaGoiY);
+    List<TuVanAI> findByMaBenhNhanOrderByThoiGianTuVanDesc(Integer maBenhNhan);
 }

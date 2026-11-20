@@ -14,8 +14,25 @@ public class BenhNhanController {
 
     private final BenhNhanService service;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private quanly.phongkham.service.TaiKhoanService taiKhoanService;
+
     public BenhNhanController(BenhNhanService service) {
         this.service = service;
+    }
+
+    @PostMapping("/dang-ky")
+    public ResponseEntity<?> dangKy(
+            @jakarta.validation.Valid @RequestBody quanly.phongkham.dto.DangKyBenhNhanRequest request) {
+        if (taiKhoanService == null) {
+            return ResponseEntity.status(500).body(java.util.Map.of("message", "Dịch vụ đăng ký tạm thời không khả dụng!"));
+        }
+        try {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                    .body(taiKhoanService.dangKyBenhNhan(request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping

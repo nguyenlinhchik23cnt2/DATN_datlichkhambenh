@@ -11,4 +11,5 @@ public interface BenhNhanRepository
         extends JpaRepository<BenhNhan, Integer> {
 
     Optional<BenhNhan> findByMaTaiKhoan(Integer maTaiKhoan);
+    
 }

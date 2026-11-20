@@ -1,15 +1,16 @@
 package quanly.phongkham.controller;
 
-import quanly.phongkham.entity.TuVanAI;
-import quanly.phongkham.service.TuVanAIService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import quanly.phongkham.dto.TuVanAIDto.PhanTichRequest;
+import quanly.phongkham.service.TuVanAIService;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tu-van-ai")
-@CrossOrigin(origins = "http://localhost:5173")
 public class TuVanAIController {
 
     private final TuVanAIService service;
@@ -18,61 +19,22 @@ public class TuVanAIController {
         this.service = service;
     }
 
-    @GetMapping
-    public List<TuVanAI> getAll() {
-        return service.getAll();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<TuVanAI> getById(
-            @PathVariable Integer id) {
-
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/benh-nhan/{maBenhNhan}")
-    public List<TuVanAI> getByBenhNhan(
-            @PathVariable Integer maBenhNhan) {
-
-        return service.getByBenhNhan(maBenhNhan);
-    }
-
-    @GetMapping("/chuyen-khoa/{maChuyenKhoa}")
-    public List<TuVanAI> getByChuyenKhoa(
-            @PathVariable Integer maChuyenKhoa) {
-
-        return service.getByChuyenKhoaGoiY(maChuyenKhoa);
-    }
-
-    @PostMapping
-    public ResponseEntity<TuVanAI> create(
-            @RequestBody TuVanAI tuVanAI) {
-
-        return ResponseEntity.ok(service.save(tuVanAI));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<TuVanAI> update(
-            @PathVariable Integer id,
-            @RequestBody TuVanAI tuVanAI) {
-
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+    // Công khai (permitAll) - widget chat gọi endpoint này
+    @PostMapping("/phan-tich")
+    public ResponseEntity<?> phanTich(@RequestBody PhanTichRequest request) {
+        try {
+            return ResponseEntity.ok(service.phanTich(request.noiDungTrieuChung()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(Map.of("message", e.getMessage()));
         }
-
-        tuVanAI.setMaTuVan(id);
-        return ResponseEntity.ok(service.save(tuVanAI));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+    // Bệnh nhân xem lại lịch sử của mình
+    @GetMapping("/cua-toi")
+    public ResponseEntity<?> cuaToi() {
+        return ResponseEntity.ok(service.lichSuCuaToi());
     }
 }

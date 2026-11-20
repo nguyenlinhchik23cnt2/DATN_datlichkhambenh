@@ -1,11 +1,15 @@
 package quanly.phongkham.controller;
 
+import quanly.phongkham.dto.BacSiChiTietDTO;
+import quanly.phongkham.dto.TaoBacSiRequest;
 import quanly.phongkham.entity.BacSi;
 import quanly.phongkham.service.BacSiService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bac-si")
@@ -21,6 +25,12 @@ public class BacSiController {
     @GetMapping
     public List<BacSi> getAll() {
         return service.getAll();
+    }
+
+    @GetMapping("/danh-sach-chi-tiet")
+    public List<BacSiChiTietDTO> getDanhSachChiTiet(
+            @RequestParam(required = false) Integer maChuyenKhoa) {
+        return service.getDanhSachChiTiet(maChuyenKhoa);
     }
 
     @GetMapping("/dang-hoat-dong")
@@ -56,6 +66,16 @@ public class BacSiController {
             @PathVariable Integer maChuyenKhoa) {
 
         return service.getActiveByChuyenKhoa(maChuyenKhoa);
+    }
+
+    @PostMapping("/tao-moi")
+    public ResponseEntity<?> taoBacSiMoi(@Valid @RequestBody TaoBacSiRequest req) {
+        try {
+            BacSiChiTietDTO result = service.taoBacSiMoi(req);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @PostMapping
